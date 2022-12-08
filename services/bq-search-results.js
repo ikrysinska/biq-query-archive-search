@@ -7,16 +7,16 @@ async function insertRowsAsStream(datasetId, tableId, rows) {
   try {
     const result = await new Promise((resolve, reject) => {
       bigqueryClient
-        .dataset(datasetId)
-        .table(tableId)
-        .insert(rows)
-        .then((results) => {
-          console.log(`Inserted ${rows.length} rows into ${tableId} for dataset ${datasetId}`);
-          resolve(rows);
-        })
-        .catch((err) => {
-          reject(err);
-        });
+          .dataset(datasetId)
+          .table(tableId)
+          .insert(rows)
+          .then((results) => {
+            console.log(`Inserted ${rows.length} rows into ${tableId} for dataset ${datasetId}`);
+            resolve(rows);
+          })
+          .catch((err) => {
+            reject(err);
+          });
     });
   } catch (error) {
     console.log("----BQ JSON Error --- \n ", JSON.stringify(error), "\n");
@@ -88,7 +88,7 @@ async function insertUsers(users, reqBody) {
       resultRows.push(row);
     }
 
-  
+
   });
   insertRowsAsStream(reqBody.dataSet.dataSetName, config.bq.table.users, resultRows);
 }
@@ -112,7 +112,7 @@ async function insertMedia(medias, reqBody) {
       resultRows.push(row);
     }
 
-  
+
   });
   insertRowsAsStream(reqBody.dataSet.dataSetName, config.bq.table.media, resultRows);
 }
@@ -127,6 +127,9 @@ async function insertSearchResults(results, reqBody) {
   let media = results.includes.media;
   if( media != undefined)
     insertMedia(media, reqBody);
+  let tweets = results.includes.tweets;
+  if( tweets != undefined)
+    insertTweets(tweets, reqBody)
 }
 
 module.exports = { insertSearchResults };

@@ -27,26 +27,27 @@ router.post("/", function (req, res) {
   bq_dataset.provisionDB(req.body.dataSet).then(function (status) {
     console.log('DB provisioning status ', status);
     if (status != null && status.includes('Successfully provisioned')) {
-      recentSearch(req.body).then( function(twttrStatus) {
+      recentSearch(req.body).then(function (twttrStatus) {
         if (twttrStatus != null) {
           res.send(twttrStatus);
         }
       })
-      .catch(function(error)  {
+          .catch(function (error) {
+            res.send(error);
+          })
+    }
+  })
+      .catch(function (error) {
+        console.log('ERROR ', error);
         res.send(error);
       })
-    } 
-  })
-  .catch(function(error)  {
-    console.log('ERROR ',error);
-    res.send(error);
-  })
 });
 
 async function recentSearch(reqBody, nextToken) {
   // validate requestBody before Search
   var rcntSearch = reqBody.recentSearch;
   let query = config.recent_search_url + '&query=' + rcntSearch.query + '&max_results=' + rcntSearch.maxResults;
+  console.log('Next token', nextToken)
   if (nextToken != undefined && nextToken != null)
     query = query + '&next_token=' + nextToken;
   if (rcntSearch.startTime != undefined && rcntSearch.startTime != null)
@@ -58,23 +59,23 @@ async function recentSearch(reqBody, nextToken) {
     let userConfig = {
       method: 'get',
       url: query,
-      headers: { 'Authorization': config.twitter_bearer_token }
+      headers: {'Authorization': config.twitter_bearer_token}
     };
     axios(userConfig)
-      .then(function (response) {
-        if (response.data.data != null) {
-          //console.log('response --',response.data);
-          bq_persist.insertSearchResults(response.data, reqBody);
-        }
-        if (response.data.meta != undefined && response.data.meta.next_token != undefined) {
-          recentSearch(reqBody, response.data.meta.next_token);
-        }
-        resolve('Recent Search results are persisted in database');
-      })
-      .catch(function (error) {
-        console.log('ERROR ',error.response.data);
-        reject(error.response.data);
-      });
+        .then(function (response) {
+          if (response.data.data != null) {
+            // console.log('response --',response.data);
+            bq_persist.insertSearchResults(response.data, reqBody);
+          }
+          if (response.data.meta != undefined && response.data.meta.next_token != undefined) {
+            recentSearch(reqBody, response.data.meta.next_token);
+          }
+          resolve('Recent Search results are persisted in database');
+        })
+        .catch(function (error) {
+          console.log('ERROR ', error.response.data);
+          reject(error.response.data);
+        });
   });
 }
 
